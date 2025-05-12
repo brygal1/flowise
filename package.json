@@ -82,6 +82,10 @@
         "node": ">=18.15.0 <19.0.0 || ^20",
         "pnpm": ">=9"
     },
+    "dependencies": {
+        "googleapis": "^129.0.0",
+        "@google-cloud/local-auth": "^2.1.0"
+    },
     "resolutions": {
         "@google/generative-ai": "^0.24.0",
         "@grpc/grpc-js": "^1.10.10",
