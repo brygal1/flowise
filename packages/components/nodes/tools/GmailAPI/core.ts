@@ -6,7 +6,7 @@ import { OAuth2Client } from 'google-auth-library'
 // Gmail API Tool to read emails
 export class GmailReadTool extends StructuredTool {
     name = 'gmail_read'
-    description = 'Use this tool to read, search, and retrieve emails from Gmail.'
+    description = 'Use this tool to read, search, and retrieve emails from Gmail. You can filter emails by search query (e.g., "from:example@gmail.com", "subject:meeting", "is:unread"), by labels (e.g., "INBOX", "UNREAD"), limit results, and retrieve email content and attachment information.'
     gmailClient: gmail_v1.Gmail
     maxResults: number
 
@@ -17,10 +17,10 @@ export class GmailReadTool extends StructuredTool {
     }
 
     schema = z.object({
-        query: z.string().optional().describe('Search query to filter emails (e.g., "from:example@gmail.com", "subject:meeting")'),
-        labelIds: z.array(z.string()).optional().describe('Array of label IDs to filter by (e.g., ["INBOX", "UNREAD"])'),
-        maxResults: z.number().optional().describe('Maximum number of emails to return'),
-        includeAttachments: z.boolean().optional().default(false).describe('Whether to include attachment information')
+        query: z.string().optional().describe('Search query to filter emails. Examples: "from:example@gmail.com", "subject:meeting", "is:unread", "has:attachment", "newer_than:2d", "older_than:1w", or combinations like "from:john is:unread"'),
+        labelIds: z.array(z.string()).optional().describe('Array of label IDs to filter by. System labels: "INBOX", "SENT", "DRAFT", "SPAM", "TRASH", "UNREAD", "STARRED", "IMPORTANT". You can also use custom label IDs.'),
+        maxResults: z.number().optional().describe('Maximum number of emails to return (default: 10, max: 100)'),
+        includeAttachments: z.boolean().optional().default(false).describe('Whether to include attachment information in the results. Set to true to get details about file attachments.')
     })
 
     async _call(input: z.infer<typeof this.schema>) {
@@ -114,7 +114,7 @@ export class GmailReadTool extends StructuredTool {
 // Gmail API Tool to send emails
 export class GmailSendTool extends StructuredTool {
     name = 'gmail_send'
-    description = 'Use this tool to compose and send emails through Gmail.'
+    description = 'Use this tool to compose and send emails through Gmail. You can specify recipients, CC/BCC, subject, body content (with HTML formatting support), and attach files. The email will be sent from the authenticated Gmail account.'
     gmailClient: gmail_v1.Gmail
 
     constructor(gmailClient: gmail_v1.Gmail) {
@@ -123,16 +123,16 @@ export class GmailSendTool extends StructuredTool {
     }
 
     schema = z.object({
-        to: z.string().describe('Email recipient(s), separated by commas'),
-        subject: z.string().describe('Subject of the email'),
-        body: z.string().describe('Body/content of the email'),
-        cc: z.string().optional().describe('CC recipient(s), separated by commas'),
-        bcc: z.string().optional().describe('BCC recipient(s), separated by commas'),
+        to: z.string().describe('Email recipient(s), separated by commas. Example: "user@example.com" or "user1@example.com, user2@example.com"'),
+        subject: z.string().describe('Subject of the email. Keep it clear and concise.'),
+        body: z.string().describe('Body/content of the email. Can contain plain text or HTML if isHtml=true.'),
+        cc: z.string().optional().describe('Carbon Copy recipient(s), separated by commas. These recipients are visible to all.'),
+        bcc: z.string().optional().describe('Blind Carbon Copy recipient(s), separated by commas. These recipients are hidden from other recipients.'),
         attachments: z.array(z.object({
             filename: z.string(),
-            content: z.string().describe('Base64 encoded content')
-        })).optional().describe('Files to attach to the email'),
-        isHtml: z.boolean().optional().default(true).describe('Whether the body is HTML formatted')
+            content: z.string().describe('Base64 encoded content of the file')
+        })).optional().describe('Files to attach to the email. Each attachment needs a filename and base64-encoded content.'),
+        isHtml: z.boolean().optional().default(true).describe('Whether the body is HTML formatted. Set to true for formatted text with links, images, etc. Set to false for plain text.')
     })
 
     async _call(input: z.infer<typeof this.schema>) {
@@ -222,7 +222,7 @@ export class GmailSendTool extends StructuredTool {
 // Gmail API Tool to create and manage drafts
 export class GmailDraftTool extends StructuredTool {
     name = 'gmail_draft'
-    description = 'Use this tool to create, update, delete, and send draft emails in Gmail.'
+    description = 'Use this tool to work with email drafts in Gmail. Actions include: create new drafts, list all drafts, update existing drafts, delete drafts, and send drafts. You can create drafts with recipients, subject, and body, then send them later.'
     gmailClient: gmail_v1.Gmail
 
     constructor(gmailClient: gmail_v1.Gmail) {
@@ -400,7 +400,7 @@ export class GmailDraftTool extends StructuredTool {
 // Gmail API Tool to manage labels
 export class GmailLabelTool extends StructuredTool {
     name = 'gmail_label'
-    description = 'Use this tool to create, list, update, or delete Gmail labels, and apply labels to emails.'
+    description = 'Use this tool to manage Gmail labels (folders). You can: list all labels and their properties, create new labels with custom colors, update existing labels, delete labels, and apply labels to specific emails. Labels are used to organize emails in Gmail.'
     gmailClient: gmail_v1.Gmail
 
     constructor(gmailClient: gmail_v1.Gmail) {
@@ -533,7 +533,7 @@ export class GmailLabelTool extends StructuredTool {
 // Gmail API Tool to manage emails (archive, delete, etc.)
 export class GmailManageTool extends StructuredTool {
     name = 'gmail_manage'
-    description = 'Use this tool to archive, delete, mark as read/unread, or move emails in Gmail.'
+    description = 'Use this tool to organize and manage emails in Gmail. Actions include: archive emails (remove from inbox), delete emails permanently, mark as read/unread, move between labels, send to trash, restore from trash, and star/unstar messages. You must provide message IDs to perform these actions.'
     gmailClient: gmail_v1.Gmail
 
     constructor(gmailClient: gmail_v1.Gmail) {
@@ -542,9 +542,9 @@ export class GmailManageTool extends StructuredTool {
     }
 
     schema = z.object({
-        action: z.enum(['archive', 'delete', 'markRead', 'markUnread', 'move', 'trash', 'untrash', 'star', 'unstar']).describe('Action to perform on emails'),
-        messageIds: z.array(z.string()).describe('Array of message IDs to perform action on'),
-        destinationLabelId: z.string().optional().describe('Destination label ID (for move action)')
+        action: z.enum(['archive', 'delete', 'markRead', 'markUnread', 'move', 'trash', 'untrash', 'star', 'unstar']).describe('Action to perform on emails: archive (remove from inbox), delete (moves message to trash), markRead/markUnread (change read status), move (to another label), trash/untrash (same as delete/restore from trash), star/unstar (add/remove star)'),
+        messageIds: z.array(z.string()).describe('Array of message IDs to perform action on. You can get these IDs from gmail_read tool results.'),
+        destinationLabelId: z.string().optional().describe('Destination label ID when using the "move" action. Required only for the move action. Can be a system label like "INBOX" or a custom label ID.')
     })
 
     async _call(input: z.infer<typeof this.schema>) {
@@ -581,12 +581,16 @@ export class GmailManageTool extends StructuredTool {
                             break
 
                         case 'delete':
-                            // Permanently delete message
-                            await this.gmailClient.users.messages.delete({
-                                userId: 'me',
-                                id: messageId
-                            })
-                            results.push(`Message ${messageId} deleted permanently`)
+                            try {
+                                // Simply move to trash (this is safer and more consistent with Gmail's behavior)
+                                await this.gmailClient.users.messages.trash({
+                                    userId: 'me',
+                                    id: messageId
+                                })
+                                results.push(`Message ${messageId} moved to trash`)
+                            } catch (error) {
+                                throw new Error(`Failed to move message to trash: ${error}`)
+                            }
                             break
 
                         case 'markRead':
@@ -685,7 +689,13 @@ export class GmailManageTool extends StructuredTool {
                             results.push(`Error: Unsupported action ${action} for message ${messageId}`)
                     }
                 } catch (error) {
-                    results.push(`Error processing message ${messageId}: ${error}`)
+                    const errorMsg = error.toString();
+                    if (errorMsg.includes('Insufficient Permission')) {
+                        results.push(`Error: Insufficient permissions to perform '${action}' action. Please re-authenticate with full Gmail access permissions.`)
+                    } else {
+                        results.push(`Error processing message ${messageId}: ${error}`)
+                    }
+                    console.error(`Gmail API error with action '${action}' on message ${messageId}:`, error)
                 }
             }
 

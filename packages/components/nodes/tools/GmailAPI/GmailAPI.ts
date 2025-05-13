@@ -64,7 +64,7 @@ class GmailAPI_Tools implements INode {
                         description: 'Archive, delete, and organize emails'
                     }
                 ],
-                default: ['readEmails', 'sendEmail'],
+                default: ['readEmails', 'sendEmail', 'draftEmail', 'manageLabels', 'manageEmails'],
                 description: 'Select the Gmail actions to enable'
             },
             {
@@ -98,7 +98,7 @@ class GmailAPI_Tools implements INode {
                     }
                 ],
                 default: 'notAuthenticated',
-                description: 'Shows the current authentication status',
+                description: 'Shows the current authentication status. If you encounter "Insufficient Permission" errors, you need to re-authenticate with the "Authenticate Gmail Account" button to grant full access permissions.',
                 additionalParams: true,
                 readonly: true
             }
@@ -135,19 +135,50 @@ class GmailAPI_Tools implements INode {
         const credentials = { clientId, clientSecret, redirectUri }
         const token = { accessToken, refreshToken, tokenExpiry }
 
+        console.log('GmailAPI - Creating Gmail client with credentials and token')
+        
         // Create Gmail client
-        const gmail = await createGmailClient(credentials, token)
+        let gmail;
+        try {
+            gmail = await createGmailClient(credentials, token)
+            console.log('GmailAPI - Gmail client created successfully')
+        } catch (error) {
+            console.error('GmailAPI - Error creating Gmail client:', error)
+            throw error
+        }
 
         // Get selected actions
-        const actions = nodeData.inputs?.actions as string
+        const actions = nodeData.inputs?.actions
         let selectedActions: string[] = []
+        
         if (actions) {
-            try {
-                selectedActions = typeof actions === 'string' ? JSON.parse(actions) : actions
-            } catch (error) {
-                console.error('Error parsing actions:', error)
+            console.log('GmailAPI - Actions input type:', typeof actions, 'Value:', actions)
+            
+            // Handle different possible formats of the actions data
+            if (Array.isArray(actions)) {
+                selectedActions = actions
+            } else if (typeof actions === 'string') {
+                try {
+                    // Try to parse as JSON if it's a string
+                    const parsed = JSON.parse(actions)
+                    selectedActions = Array.isArray(parsed) ? parsed : [parsed]
+                } catch (error) {
+                    // If parsing fails, it might be a single action
+                    console.error('Error parsing actions:', error)
+                    selectedActions = [actions] // Treat as single action
+                }
+            } else {
+                console.error('Unexpected actions type:', typeof actions)
             }
         }
+        
+        // Use defaults if no valid actions were selected
+        if (selectedActions.length === 0) {
+            console.log('GmailAPI - No valid actions found, using defaults')
+            selectedActions = ['readEmails', 'sendEmail']
+        }
+        
+        console.log('GmailAPI - Selected actions:', selectedActions)
 
         // Get max results
         const maxResults = nodeData.inputs?.maxResults as number || 10
@@ -212,12 +243,16 @@ class GmailAPI_Tools implements INode {
 
             // Define scopes for Gmail API access
             const scopes = [
-                'https://www.googleapis.com/auth/gmail.readonly',
-                'https://www.googleapis.com/auth/gmail.send',
-                'https://www.googleapis.com/auth/gmail.compose',
-                'https://www.googleapis.com/auth/gmail.modify',
-                'https://www.googleapis.com/auth/gmail.labels'
+                'https://mail.google.com/',                          // Full access to the account (most permissive)
+                'https://www.googleapis.com/auth/gmail.readonly',    // Read-only access
+                'https://www.googleapis.com/auth/gmail.send',        // Send emails only
+                'https://www.googleapis.com/auth/gmail.compose',     // Create, read, update drafts and send emails
+                'https://www.googleapis.com/auth/gmail.modify',      // All read/write operations except permanent deletion
+                'https://www.googleapis.com/auth/gmail.labels',      // Manage labels
+                'https://www.googleapis.com/auth/gmail.settings.basic' // Manage basic settings
             ]
+            
+            console.log('Requesting Gmail API scopes:', scopes.join(', '))
 
             console.log('Generating authentication URL with scopes:', scopes.join(', '))
 
