@@ -1005,6 +1005,71 @@ const NodeInputHandler = ({
                                     ))}
                             </>
                         )}
+                        {inputParam.type === 'button' && (
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                color="primary"
+                                sx={{ mt: 1, mb: 1, fontWeight: 500 }}
+                                disabled={disabled}
+                                onClick={async () => {
+                                    try {
+                                        const username = localStorage.getItem('username')
+                                        const password = localStorage.getItem('password')
+
+                                        const response = await axios.post(
+                                            `${baseURL}/api/v1/node-load-method/${data.name}`,
+                                            {
+                                                ...data,
+                                                loadMethod: 'startGmailAuth',
+                                                inputs: data.inputs
+                                            },
+                                            {
+                                                auth: username && password ? { username, password } : undefined,
+                                                headers: { 'Content-type': 'application/json', 'x-request-from': 'internal' }
+                                            }
+                                        )
+
+                                        if (response.data && response.data.authUrl) {
+                                            // Open the auth URL in a new window
+                                            window.open(response.data.authUrl, '_blank', 'width=800,height=600')
+
+                                            // Show success notification
+                                            enqueueSnackbar({
+                                                message: 'Authentication window opened. Please complete the Google authentication process.',
+                                                options: {
+                                                    key: new Date().getTime() + Math.random(),
+                                                    variant: 'info',
+                                                    action: (key) => (
+                                                        <Button style={{ color: 'white' }} onClick={() => closeSnackbar(key)}>
+                                                            <IconX />
+                                                        </Button>
+                                                    )
+                                                }
+                                            })
+                                        }
+                                    } catch (error) {
+                                        console.error('Error in Gmail authentication:', error)
+
+                                        // Show error notification
+                                        enqueueSnackbar({
+                                            message: error.response?.data?.message || 'Failed to start Gmail authentication',
+                                            options: {
+                                                key: new Date().getTime() + Math.random(),
+                                                variant: 'error',
+                                                action: (key) => (
+                                                    <Button style={{ color: 'white' }} onClick={() => closeSnackbar(key)}>
+                                                        <IconX />
+                                                    </Button>
+                                                )
+                                            }
+                                        })
+                                    }
+                                }}
+                            >
+                                {inputParam.buttonText || "Authenticate"}
+                            </Button>
+                        )}
                         {inputParam.type === 'file' && (
                             <File
                                 disabled={disabled}
@@ -1135,14 +1200,37 @@ const NodeInputHandler = ({
                         )}
                         {inputParam.type === 'options' && (
                             <div key={`${data.id}_${JSON.stringify(data.inputs[inputParam.name])}`}>
-                                <Dropdown
-                                    disabled={disabled}
-                                    name={inputParam.name}
-                                    options={getDropdownOptions(inputParam)}
-                                    freeSolo={inputParam.freeSolo}
-                                    onSelect={(newValue) => handleDataChange({ inputParam, newValue })}
-                                    value={data.inputs[inputParam.name] ?? inputParam.default ?? 'choose an option'}
-                                />
+                                {inputParam.readonly ? (
+                                    <div
+                                        style={{
+                                            padding: '8px 12px',
+                                            marginTop: '8px',
+                                            borderRadius: '4px',
+                                            backgroundColor: inputParam.name === 'authStatus' &&
+                                                data.inputs[inputParam.name] === 'authenticated' ?
+                                                'rgba(46, 125, 50, 0.1)' : 'rgba(211, 47, 47, 0.1)',
+                                            border: '1px solid',
+                                            borderColor: inputParam.name === 'authStatus' &&
+                                                data.inputs[inputParam.name] === 'authenticated' ?
+                                                'rgba(46, 125, 50, 0.5)' : 'rgba(211, 47, 47, 0.5)',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        {(inputParam.options || []).find(opt =>
+                                            opt.name === (data.inputs[inputParam.name] || inputParam.default))?.label ||
+                                            'Status Unknown'}
+                                    </div>
+                                ) : (
+                                    <Dropdown
+                                        disabled={disabled}
+                                        name={inputParam.name}
+                                        options={getDropdownOptions(inputParam)}
+                                        freeSolo={inputParam.freeSolo}
+                                        onSelect={(newValue) => handleDataChange({ inputParam, newValue })}
+                                        value={data.inputs[inputParam.name] ?? inputParam.default ?? 'choose an option'}
+                                    />
+                                )}
                             </div>
                         )}
                         {inputParam.type === 'multiOptions' && (

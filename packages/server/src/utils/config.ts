@@ -2,6 +2,7 @@
 
 import path from 'path'
 import dotenv from 'dotenv'
+import * as fs from 'fs'
 
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env'), override: true })
 
@@ -18,6 +19,11 @@ const loggingConfig = {
         format: 'jsonl', // can't be changed currently
         filename: 'server-requests.log.jsonl' // should end with .jsonl
     }
+}
+
+// Ensure log directory exists
+if (!fs.existsSync(loggingConfig.dir)) {
+    fs.mkdirSync(loggingConfig.dir, { recursive: true })
 }
 
 export default {

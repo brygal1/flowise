@@ -104,3 +104,5 @@
 ## S/MIME message
 *.smime
 *.vsix
+
+**/.claude/settings.local.json

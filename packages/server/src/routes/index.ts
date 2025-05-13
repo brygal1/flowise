@@ -26,6 +26,7 @@ import nodeCustomFunctionRouter from './node-custom-functions'
 import nodeIconRouter from './node-icons'
 import nodeLoadMethodRouter from './node-load-methods'
 import nodesRouter from './nodes'
+import oauthRouter from './oauth'
 import openaiAssistantsRouter from './openai-assistants'
 import openaiAssistantsFileRouter from './openai-assistants-files'
 import openaiAssistantsVectorStoreRouter from './openai-assistants-vector-store'
@@ -98,5 +99,6 @@ router.use('/nvidia-nim', nvidiaNimRouter)
 router.use('/executions', executionsRouter)
 router.use('/validation', validationRouter)
 router.use('/agentflowv2-generator', agentflowv2GeneratorRouter)
+router.use('/oauth', oauthRouter)
 
 export default router

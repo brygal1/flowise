@@ -39,7 +39,33 @@ export default defineConfig(async ({ mode }) => {
         },
         root: resolve(__dirname),
         build: {
-            outDir: './build'
+            outDir: './build',
+            chunkSizeWarningLimit: 2000,
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        vendor: [
+                            'react',
+                            'react-dom',
+                            '@mui/material',
+                            '@mui/icons-material',
+                            'reactflow',
+                            '@tabler/icons-react',
+                            'axios'
+                        ],
+                        codemirror: [
+                            '@codemirror/state',
+                            '@codemirror/view',
+                            '@codemirror/language',
+                            '@codemirror/lang-javascript',
+                            '@codemirror/lang-json',
+                            '@uiw/react-codemirror',
+                            '@uiw/codemirror-theme-vscode',
+                            '@uiw/codemirror-theme-sublime'
+                        ]
+                    }
+                }
+            }
         },
         server: {
             open: true,

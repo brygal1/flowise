@@ -93,9 +93,10 @@ if (process.env.STORAGE_TYPE === 'gcs') {
 const logDir = config.logging.dir
 
 // Create the log directory if it doesn't exist
-if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir)
-}
+// This is already handled in config.ts to ensure it happens before logger instantiation
+// if (!fs.existsSync(logDir)) {
+//     fs.mkdirSync(logDir, { recursive: true })
+// }
 
 const logger = createLogger({
     format: combine(
@@ -112,6 +113,7 @@ const logger = createLogger({
     },
     transports: [
         new transports.Console(),
+        // Ensure we always have at least one transport
         ...(!process.env.STORAGE_TYPE || process.env.STORAGE_TYPE === 'local'
             ? [
                   new transports.File({
@@ -186,6 +188,8 @@ export function expressRequestLogger(req: Request, res: Response, next: NextFunc
                 }
             },
             transports: [
+                // Always ensure we have basic transports
+                new transports.Console(),
                 ...(!process.env.STORAGE_TYPE || process.env.STORAGE_TYPE === 'local'
                     ? [
                           new transports.File({

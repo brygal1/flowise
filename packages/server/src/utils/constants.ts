@@ -19,7 +19,9 @@ export const WHITELIST_URLS = [
     '/api/v1/version',
     '/api/v1/attachments',
     '/api/v1/metrics',
-    '/api/v1/nvidia-nim'
+    '/api/v1/nvidia-nim',
+    '/api/v1/oauth/',
+    '/api/v1/credentials/startauth'
 ]
 
 export const OMIT_QUEUE_JOB_DATA = ['componentNodes', 'appDataSource', 'sseStreamer', 'telemetry', 'cachePool']

@@ -22,6 +22,7 @@ export type NodeParamsType =
     | 'file'
     | 'folder'
     | 'tabs'
+    | 'button'
 
 export type CommonType = string | number | boolean | undefined | null
 
@@ -105,6 +106,8 @@ export interface INodeParams {
     hide?: INodeDisplay
     generateDocStoreDescription?: boolean
     generateInstruction?: boolean
+    buttonText?: string
+    readonly?: boolean
 }
 
 export interface INodeExecutionData {

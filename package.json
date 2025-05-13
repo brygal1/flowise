@@ -83,8 +83,9 @@
         "pnpm": ">=9"
     },
     "dependencies": {
-        "googleapis": "^129.0.0",
-        "@google-cloud/local-auth": "^2.1.0"
+        "@google-cloud/local-auth": "^2.1.0",
+        "google-auth-library": "^9.15.1",
+        "googleapis": "^129.0.0"
     },
     "resolutions": {
         "@google/generative-ai": "^0.24.0",
