@@ -66,6 +66,12 @@
 *.rsa
 *.key.json
 
+## OAuth and tokens
+**/oauth_credentials.json
+**/tokens.json
+**/credentials.json
+**/token.json
+
 ## ssh keys
 *.ssh
 *.ssh-key
