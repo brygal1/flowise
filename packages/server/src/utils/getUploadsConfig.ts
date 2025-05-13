@@ -86,6 +86,10 @@ export const utilGetUploadsConfig = async (chatflowid: string): Promise<IUploadC
     const imgUploadAllowedNodes = [
         'llmChain',
         'conversationChain',
+        'conversationalRetrievalQAChain', // This is the correct node name
+        'retrievalQAChain',
+        'multiRetrievalQAChain',
+        'vectorDBQAChain',
         'reactAgentChat',
         'conversationalAgent',
         'toolAgent',

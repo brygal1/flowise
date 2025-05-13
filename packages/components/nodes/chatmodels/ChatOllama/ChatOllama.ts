@@ -24,7 +24,7 @@ class ChatOllama_ChatModels implements INode {
         this.type = 'ChatOllama'
         this.icon = 'Ollama.svg'
         this.category = 'Chat Models'
-        this.description = 'Chat completion using open-source LLM on Ollama'
+        this.description = 'Chat completion using open-source LLM on Ollama (supports image input with vision-capable models)'
         this.baseClasses = [this.type, ...getBaseClasses(ChatOllama)]
         this.inputs = [
             {
@@ -60,7 +60,7 @@ class ChatOllama_ChatModels implements INode {
                 name: 'allowImageUploads',
                 type: 'boolean',
                 description:
-                    'Allow image input. Refer to the <a href="https://docs.flowiseai.com/using-flowise/uploads#image" target="_blank">docs</a> for more details.',
+                    'Allow image input for Ollama models with vision capabilities. Many models support this feature (Gemma3, llama3, llava, etc.) without explicitly having "vision" in their name. Refer to the <a href="https://docs.flowiseai.com/using-flowise/uploads#image" target="_blank">docs</a> for more details.',
                 default: false,
                 optional: true
             },
@@ -266,6 +266,12 @@ class ChatOllama_ChatModels implements INode {
 
         const model = new ChatOllama(nodeData.id, obj)
         model.setMultiModalOption(multiModalOption)
+        
+        // If image uploads are allowed, call setVisionModel to check and notify if model isn't vision compatible
+        if (allowImageUploads) {
+            model.setVisionModel()
+        }
+        
         return model
     }
 }
