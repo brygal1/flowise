@@ -1017,9 +1017,12 @@ const NodeInputHandler = ({
                                         const username = localStorage.getItem('username')
                                         const password = localStorage.getItem('password')
 
-                                        // Determine if we're authenticating with Gmail or Calendar
-                                        const isCalendar = data.name.toLowerCase().includes('calendar');
-                                        const providerKey = isCalendar ? 'calendar' : 'gmail';
+                                        // Get service name for success message
+                                        const serviceName = data.name.toLowerCase().includes('calendar') ? 'Google Calendar' : 'Gmail';
+                                        const providerKey = serviceName.toLowerCase().includes('calendar') ? 'calendar' : 'gmail';
+                                        
+                                        // Import axios dynamically for this function
+                                        const axios = (await import('axios')).default;
                                         
                                         const response = await axios.post(
                                             `${baseURL}/api/v1/node-load-method/${data.name}`,
@@ -1037,9 +1040,6 @@ const NodeInputHandler = ({
                                         if (response.data && response.data.authUrl) {
                                             // Open the auth URL in a new window
                                             window.open(response.data.authUrl, '_blank', 'width=800,height=600')
-
-                                            // Get service name for success message
-                                            const serviceName = data.name.toLowerCase().includes('calendar') ? 'Google Calendar' : 'Gmail';
                                             
                                             // Show success notification
                                             enqueueSnackbar({

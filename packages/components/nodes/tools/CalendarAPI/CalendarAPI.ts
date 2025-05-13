@@ -67,35 +67,8 @@ class CalendarAPI_Tools implements INode {
                 type: 'number',
                 default: 10,
                 description: 'Maximum number of events to fetch in a single request'
-            },
-            {
-                label: 'Authenticate Calendar',
-                name: 'authenticate',
-                type: 'button',
-                buttonText: '🔑 Authenticate Google Calendar Account',
-                description: 'Click to start OAuth authentication with your Google Calendar account'
-            },
-            {
-                label: 'Authentication Status',
-                name: 'authStatus',
-                type: 'options',
-                options: [
-                    {
-                        label: '⚠️ Not Authenticated',
-                        name: 'notAuthenticated',
-                        description: 'Google Calendar account not connected'
-                    },
-                    {
-                        label: '✅ Authenticated',
-                        name: 'authenticated',
-                        description: 'Google Calendar account connected successfully'
-                    }
-                ],
-                default: 'notAuthenticated',
-                description: 'Shows the current authentication status. If you encounter permission errors, you need to re-authenticate to grant full access permissions.',
-                additionalParams: true,
-                readonly: true
             }
+            // Authentication is handled through credentials, no need for extra inputs
         ]
     }
 
@@ -115,14 +88,11 @@ class CalendarAPI_Tools implements INode {
             throw new Error('Missing required credentials for Google Calendar API')
         }
 
-        // Update the authentication status
+        // Check authentication
         const isAuthenticated = accessToken && refreshToken
-        if (nodeData.inputs) {
-            nodeData.inputs.authStatus = isAuthenticated ? 'authenticated' : 'notAuthenticated'
-        }
 
         if (!isAuthenticated) {
-            throw new Error('Google Calendar account not authenticated. Please click the Authenticate button to connect your Google Calendar account.')
+            throw new Error('Google Calendar account not authenticated. Please configure the Google Calendar OAuth credential to connect your account.')
         }
 
         // Create client with credentials
