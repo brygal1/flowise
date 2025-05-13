@@ -150,18 +150,31 @@ const CredentialInputHandler = ({ inputParam, data, disabled = false, options = 
                                         // Simple credential object - no need to handle masked fields
                                         // Use the API base URL for the redirect (server port, not UI port)
                                         const apiBaseUrl = baseURL || 'http://localhost:8118';
+                                        
+                                        // Determine the credential type and redirect URI based on the inputParam
+                                        const credentialName = inputParam.buttonText.toLowerCase().includes('gmail') ? 'gmailOAuth' : 'googleCalendarOAuth';
+                                        const callbackPath = credentialName === 'gmailOAuth' ? 'gmail' : 'calendar';
+                                        
                                         const credentialData = {
                                             clientId: data.clientId,
                                             clientSecret: data.clientSecret,
-                                            redirectUri: data.redirectUri || `${apiBaseUrl}/api/v1/oauth/callback/gmail`
+                                            redirectUri: data.redirectUri || `${apiBaseUrl}/api/v1/oauth/callback/${callbackPath}`
                                         };
                                         
                                         const response = await axios.post(
-                                            `${baseURL}/api/v1/credentials/startauth`,
+                                            `${baseURL}/api/v1/oauth/start/${callbackPath}`,
                                             {
                                                 credentialId: options.credentialId,
-                                                credentialName: 'gmailOAuth',
-                                                credentialData
+                                                credentialName,
+                                                credentialData,
+                                                // Create a minimal nodeData structure
+                                                nodeData: {
+                                                    inputs: {
+                                                        clientId: data.clientId,
+                                                        clientSecret: data.clientSecret,
+                                                        redirectUri: data.redirectUri
+                                                    }
+                                                }
                                             },
                                             {
                                                 auth: username && password ? { username, password } : undefined,
@@ -188,11 +201,12 @@ const CredentialInputHandler = ({ inputParam, data, disabled = false, options = 
                                             })
                                         }
                                     } catch (error) {
-                                        console.error('Error in Gmail authentication:', error)
+                                        const oauthService = inputParam.buttonText.toLowerCase().includes('gmail') ? 'Gmail' : 'Google Calendar';
+                                        console.error(`Error in ${oauthService} authentication:`, error)
 
                                         // Get detailed error from response if available
                                         const errorMessage = error.response?.data?.message ||
-                                            'Failed to start Gmail authentication. Please ensure you have entered valid Client ID and Secret.';
+                                            `Failed to start ${oauthService} authentication. Please ensure you have entered valid Client ID and Secret.`;
 
                                         const errorDetails = error.response?.data?.details;
 

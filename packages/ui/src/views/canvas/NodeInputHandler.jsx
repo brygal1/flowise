@@ -1017,11 +1017,15 @@ const NodeInputHandler = ({
                                         const username = localStorage.getItem('username')
                                         const password = localStorage.getItem('password')
 
+                                        // Determine if we're authenticating with Gmail or Calendar
+                                        const isCalendar = data.name.toLowerCase().includes('calendar');
+                                        const providerKey = isCalendar ? 'calendar' : 'gmail';
+                                        
                                         const response = await axios.post(
                                             `${baseURL}/api/v1/node-load-method/${data.name}`,
                                             {
                                                 ...data,
-                                                loadMethod: 'startGmailAuth',
+                                                loadMethod: 'startGmailAuth', // Method name stays the same for backward compatibility
                                                 inputs: data.inputs
                                             },
                                             {
@@ -1034,9 +1038,12 @@ const NodeInputHandler = ({
                                             // Open the auth URL in a new window
                                             window.open(response.data.authUrl, '_blank', 'width=800,height=600')
 
+                                            // Get service name for success message
+                                            const serviceName = data.name.toLowerCase().includes('calendar') ? 'Google Calendar' : 'Gmail';
+                                            
                                             // Show success notification
                                             enqueueSnackbar({
-                                                message: 'Authentication window opened. Please complete the Google authentication process.',
+                                                message: `Authentication window opened. Please complete the ${serviceName} authorization process.`,
                                                 options: {
                                                     key: new Date().getTime() + Math.random(),
                                                     variant: 'info',
@@ -1049,11 +1056,12 @@ const NodeInputHandler = ({
                                             })
                                         }
                                     } catch (error) {
-                                        console.error('Error in Gmail authentication:', error)
-
+                                        const serviceName = data.name.toLowerCase().includes('calendar') ? 'Google Calendar' : 'Gmail';
+                                        console.error(`Error in ${serviceName} authentication:`, error)
+                                        
                                         // Show error notification
                                         enqueueSnackbar({
-                                            message: error.response?.data?.message || 'Failed to start Gmail authentication',
+                                            message: error.response?.data?.message || `Failed to start ${serviceName} authentication`,
                                             options: {
                                                 key: new Date().getTime() + Math.random(),
                                                 variant: 'error',
